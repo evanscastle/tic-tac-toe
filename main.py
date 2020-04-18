@@ -27,9 +27,6 @@ def train(p1, p2, NUMBER_OF_EPISODES):
             board.makeMove(action)
         # board.print()
 
-        # print winner of episode
-        # print(board.winner)
-
         # update state function following episode
         if board.winner == 'p1':
             p1.updateValues('win')
@@ -73,26 +70,25 @@ def simulate_gameplay(p1, p2, NUMBER_OF_EPISODES):
         else:
             play_record[2] += 1
 
-    agent_rating = (play_record[0] + 0.5 * play_record[2]) / NUMBER_OF_EPISODES
+    agent_rating = (play_record[0] + 0.2 * play_record[2]) / NUMBER_OF_EPISODES
     formatted_agent_rating = f"{agent_rating:.4f}"
     print('Record: ' + str(play_record))
     print('Agent Rating: ' + formatted_agent_rating)
 
 
-
 if __name__ == '__main__':
-    NUMBER_OF_EPISODES = 1000
+    NUMBER_OF_EPISODES = 2000
 
     p1 = Player('001', NUMBER_OF_EPISODES)
     p2 = Player('002', NUMBER_OF_EPISODES)
 
     train(p1, p2, NUMBER_OF_EPISODES)
 
+
     #p1.loadStates('agents/policy_001.pkl')
 
     # p1 = Player()
     p2 = Player()
 
+    print(len(p1.state_space))
     simulate_gameplay(p1, p2, NUMBER_OF_EPISODES)
-
-

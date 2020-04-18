@@ -6,13 +6,18 @@ class Player:
     def __init__(self, name="default", num_episodes=1000):
         self.name = name
 
-        self.exploration_rate = 0.3
-        self.learning_rate = 0.1
+        self.INITIAL_EXPLORATION_RATE = 0.7
+        self.exploration_rate = self.INITIAL_EXPLORATION_RATE
+
+        self.INITIAL_LEARNING_RATE = 0.5
+        self.learning_rate = self.INITIAL_LEARNING_RATE
+
         self.discount_factor = 0.9
 
-        self.decay_rate = math.e**(math.log(0.001)/num_episodes)
+        self.num_episodes = num_episodes
+        self.num_updates = 0
 
-        self.move_penalty = -0.05 # slight negative reward to incentivize agent to win as quickly as possible
+        self.move_penalty = -0.01 # slight negative reward to incentivize agent to win as quickly as possible
         self.episode_states = []
         self.state_space = {}
 
@@ -72,16 +77,27 @@ class Player:
             if self.state_space.get(state) is None:
                 self.state_space[state] = self.move_penalty
 
-            # V(S_k) <- V(S_k) + a[V(S_k+1) - V(S_k)]
             # this is modified policy iteration because we are not updating the value based on all adjacent states
             # but only those that are visited during the episode
-            self.state_space[state] += self.learning_rate*(next_state_val - self.state_space[state])
+
+            # V(S_k) <- V(S_k) + a[V(S_k+1) - V(S_k)]
+            # self.state_space[state] += self.learning_rate*(next_state_val - self.state_space[state])
+
+            # V(S_k) = Reward + gamma * V(S_k+1)
+            self.state_space[state] = self.move_penalty + self.discount_factor * self.learning_rate * next_state_val
 
             next_state_val = self.state_space[state]
 
-        # want agent to gradually become more confident in decisions
-        self.exploration_rate = self.decay_rate * self.exploration_rate
-        self.learning_rate = self.decay_rate * self.learning_rate
+        # want agent to gradually become more confident in decisions and to explore less
+        if self.num_updates < self.num_episodes / 5:
+            self.exploration_rate = self.INITIAL_EXPLORATION_RATE
+            self.learning_rate = self.INITIAL_LEARNING_RATE
+        else:
+            self.exploration_rate = self.INITIAL_EXPLORATION_RATE * (1 - self.num_updates/self.num_episodes)
+            self.learning_rate = self.INITIAL_LEARNING_RATE * (1 - self.num_updates / self.num_episodes)
+
+        self.num_updates += 1
+
 
     def saveStates(self):
         fw = open('agents/policy_' + str(self.name) + '.pkl', 'wb')
